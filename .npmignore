@@ -1,0 +1,10 @@
+src/
+test/
+coverage/
+.npm-cache/
+.env
+.env.*
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+*.tgz
