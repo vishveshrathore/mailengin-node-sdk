@@ -17,15 +17,15 @@ npm install mailengin
 
 **Requirements:** Node.js 18 or newer.
 
-> [!IMPORTANT]
-> This SDK is for server-side applications only. Never expose a MailEngin API key in browser, mobile, or other client-side code.
+> **Important:** This SDK is for server-side applications only. Never expose a MailEngin API key in browser, mobile, or other client-side code.
 
 ## Before You Send
 
 1. [Verify a sending domain](https://mailengin.app/dashboard/domains).
-2. [Create an API key](https://mailengin.app/dashboard/api-keys) and securely save the full secret.
-3. [Create and publish a Developer Template](https://mailengin.app/dashboard/dev-templates).
-4. Copy the template's **API name**, such as `welcome-email`.
+2. Choose a sender address on that domain, such as `hello@yourdomain.com`.
+3. [Create an API key](https://mailengin.app/dashboard/api-keys) and securely save the full secret.
+4. [Create and publish a Developer Template](https://mailengin.app/dashboard/dev-templates).
+5. Copy the template's **API name**, such as `welcome-email`.
 
 Store the API key in a server-side environment variable:
 
@@ -46,6 +46,7 @@ const mailengin = new MailEngin({
 
 const email = await mailengin.emails.send({
   to: 'user@example.com',
+  fromEmail: 'hello@yourdomain.com',
   templateName: 'welcome-email',
   variables: {
     first_name: 'Vishvesh',
@@ -55,13 +56,34 @@ const email = await mailengin.emails.send({
 console.log(email.id);
 ```
 
-The published template supplies the HTML, subject, and sender. Variables such as `{{first_name}}` are replaced for the recipient.
+The published template supplies the HTML and subject. Variables such as `{{first_name}}` are replaced for the recipient.
+
+## How the Sender Is Selected
+
+MailEngin does not prompt for a domain because the SDK runs inside non-interactive servers, background jobs, and serverless functions. Supply the complete sender address with `fromEmail`:
+
+```js
+await mailengin.emails.send({
+  to: 'user@example.com',
+  fromEmail: 'hello@yourdomain.com',
+  templateName: 'welcome-email',
+});
+```
+
+The sender is resolved in this order:
+
+1. `fromEmail` provided in the SDK request.
+2. The sender saved in the published Developer Template.
+3. `noreply@<authorized-domain>` as a fallback.
+
+The domain in `fromEmail` must be verified in MailEngin and authorized for the API key. For predictable production sends, set a sender in the template or provide `fromEmail` explicitly.
 
 ## Send One Email
 
 ```js
 const result = await mailengin.emails.send({
   to: 'customer@example.com',
+  fromEmail: 'hello@yourdomain.com',
   templateName: 'account-verification',
   variables: {
     first_name: 'Asha',
@@ -93,7 +115,7 @@ Example response:
 | `templateName` | `string` | Recommended | Published template API name or exact display name. |
 | `variables` | `object` | No | Values used to replace template variables. |
 | `subject` | `string` | No | Overrides the template subject. |
-| `fromEmail` | `string` | No | Overrides the sender using an authorized domain. |
+| `fromEmail` | `string` | Recommended | Complete sender address on a verified, API-key-authorized domain. |
 | `replyToMailEngin` | `boolean` | No | Routes replies into the MailEngin inbox. |
 | `html` | `string` | Advanced | Raw HTML fallback when no template is used. |
 
@@ -113,6 +135,7 @@ const job = await mailengin.emails.sendBulk({
       variables: { first_name: 'Ben' },
     },
   ],
+  fromEmail: 'hello@yourdomain.com',
   templateName: 'product-update',
   variables: {
     product_name: 'MailEngin',
