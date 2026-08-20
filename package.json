@@ -34,12 +34,12 @@
     "node": ">=18"
   },
   "scripts": {
-    "clean": "rimraf dist coverage",
+    "clean": "node -e \"const fs=require('node:fs'); for (const path of ['dist','coverage']) fs.rmSync(path,{recursive:true,force:true})\"",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "check": "npm run typecheck && npm run test && npm run build",
+    "test": "node --test test/mailengin.test.mjs",
+    "test:watch": "node --test --watch test/mailengin.test.mjs",
+    "check": "npm run typecheck && npm run build && npm run test",
     "prepublishOnly": "npm run check"
   },
   "publishConfig": {
@@ -47,10 +47,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
-    "rimraf": "^6.1.3",
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "esbuild": "^0.28.1"
